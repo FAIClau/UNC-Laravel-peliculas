@@ -1,19 +1,22 @@
-@extends('layouts.peliculas', ['title' => $pelicula ? $pelicula['titulo'] : 'Pelicula no encontrada'])
+@extends('layouts.peliculas', ['title' => $pelicula ? $pelicula->titulo : 'Pelicula no encontrada'])
 
 @section('content')
     @if ($pelicula)
-        @if ($url = $modelo->urlImagen($pelicula['imagen']))
+        @if ($url = $modelo->urlImagen($pelicula->imagen))
             <img
                 class="detalle-poster"
                 src="{{ $url }}"
-                alt="Poster de {{ $pelicula['titulo'] }}"
+                alt="Poster de {{ $pelicula->titulo }}"
             >
         @endif
 
-        <h1>{{ $pelicula['titulo'] }}</h1>
-        <p><strong>Genero:</strong> {{ $pelicula['genero'] }}</p>
-        <p><strong>Anio:</strong> {{ (int) $pelicula['anio'] }}</p>
-        <p>{!! nl2br(e($pelicula['descripcion'])) !!}</p>
+        <h1>{{ $pelicula->titulo }}</h1>
+        <p><strong>Genero:</strong> {{ $pelicula->genero }}</p>
+        <p><strong>Anio:</strong> {{ $pelicula->anio }}</p>
+        <p>{!! nl2br(e($pelicula->descripcion)) !!}</p>
+
+        
+        <article class="pelicula">
     @else
         <h1>Pelicula no encontrada</h1>
     @endif

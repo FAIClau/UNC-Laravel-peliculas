@@ -3,44 +3,34 @@
 namespace Tests\Feature;
 
 use App\Models\Pelicula;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PeliculaControllerTest extends TestCase
 {
-    private string $dataFile;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->dataFile = storage_path('framework/testing/peliculas.json');
+        Pelicula::create([
+            'titulo' => 'Volver al futuro',
+            'genero' => 'Ciencia ficcion',
+            'anio' => 1985,
+            'descripcion' => 'Marty McFly viaja accidentalmente al pasado.',
+            'imagen' => null,
+        ]);
 
-        if (! is_dir(dirname($this->dataFile))) {
-            mkdir(dirname($this->dataFile), 0755, true);
-        }
-
-        file_put_contents($this->dataFile, json_encode([
-            [
-                'id' => 1,
-                'titulo' => 'Volver al futuro',
-                'genero' => 'Ciencia ficcion',
-                'anio' => 1985,
-                'descripcion' => 'Marty McFly viaja accidentalmente al pasado.',
-                'imagen' => null,
-            ],
-            [
-                'id' => 2,
-                'titulo' => 'El gran pez',
-                'genero' => 'Drama',
-                'anio' => 2003,
-                'descripcion' => 'Un hijo intenta conocer la verdadera historia de su padre.',
-                'imagen' => null,
-            ],
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-        $this->app->bind(Pelicula::class, fn (): Pelicula => new Pelicula($this->dataFile));
+        Pelicula::create([
+            'titulo' => 'El gran pez',
+            'genero' => 'Drama',
+            'anio' => 2003,
+            'descripcion' => 'Un hijo intenta conocer la verdadera historia de su padre.',
+            'imagen' => null,
+        ]);
     }
 
     public function test_catalogo_muestra_las_peliculas_guardadas(): void
@@ -87,13 +77,15 @@ class PeliculaControllerTest extends TestCase
 
         $response->assertRedirect(route('peliculas.index'));
 
-        $peliculas = json_decode(file_get_contents($this->dataFile), true);
+        $this->assertDatabaseHas('peliculas', [
+            'titulo' => 'Interestelar',
+            'genero' => 'Ciencia ficcion',
+            'anio' => 2014,
+            'descripcion' => 'Un viaje espacial para salvar a la humanidad.',
+        ]);
 
-        $this->assertSame('Interestelar', $peliculas[2]['titulo']);
-        $this->assertSame('Ciencia ficcion', $peliculas[2]['genero']);
-        $this->assertSame(2014, $peliculas[2]['anio']);
-        $this->assertSame('Un viaje espacial para salvar a la humanidad.', $peliculas[2]['descripcion']);
+        $pelicula = Pelicula::where('titulo', 'Interestelar')->firstOrFail();
 
-        Storage::disk('public')->assertExists($peliculas[2]['imagen']);
+        Storage::disk('public')->assertExists($pelicula->imagen);
     }
 }

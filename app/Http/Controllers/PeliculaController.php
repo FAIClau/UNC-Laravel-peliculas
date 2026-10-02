@@ -10,33 +10,34 @@ use Illuminate\View\View;
 
 class PeliculaController extends Controller
 {
-    public function __construct(private readonly Pelicula $modelo) {}
-
     public function index(): View
     {
         return view('peliculas.index', [
-            'peliculas' => $this->modelo->obtenerTodas(),
+            'peliculas' => Pelicula::orderBy('titulo')->get(),
             'titulo' => 'Catalogo de peliculas',
             'activeFilter' => 'todas',
-            'modelo' => $this->modelo,
+            'modelo' => new Pelicula(),
         ]);
     }
 
     public function cienciaFiccion(): View
     {
         return view('peliculas.index', [
-            'peliculas' => $this->modelo->obtenerPorGenero('Ciencia ficcion'),
+            'peliculas' => Pelicula::where('genero', 'Ciencia ficcion')
+                ->orderBy('titulo')
+                ->get(),
             'titulo' => 'Peliculas de ciencia ficcion',
             'activeFilter' => 'ciencia-ficcion',
-            'modelo' => $this->modelo,
+            'modelo' => new Pelicula(),
         ]);
     }
 
     public function show(int $id): View
     {
+        $pelicula=Pelicula::find($id);
         return view('peliculas.show', [
-            'pelicula' => $this->modelo->obtenerPorId($id),
-            'modelo' => $this->modelo,
+            'pelicula' =>  $pelicula ,
+            'modelo' => new Pelicula(),
         ]);
     }
 
@@ -61,12 +62,13 @@ class PeliculaController extends Controller
             ],
         ]);
 
-        $this->modelo->agregar([
+        Pelicula::create([
             'titulo' => $validated['titulo'],
             'genero' => $validated['genero'],
             'anio' => (int) $validated['anio'],
             'descripcion' => $validated['descripcion'],
-        ], $request->file('imagen'));
+            'imagen' => $request->file('imagen')->store('peliculas', 'public'),
+        ]);
 
         return redirect()->route('peliculas.index');
     }
